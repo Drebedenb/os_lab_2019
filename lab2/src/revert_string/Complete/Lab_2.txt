@@ -4,3 +4,10 @@
 Cтек ( Stack ) и Куча ( Heap ) : об основных различиях в двух словах. Очень кратко, но понятно.
 Стек — это область оперативной памяти, которая создаётся для каждого потока. Он работает в порядке LIFO (Last In, First Out), 
 то есть последний добавленный в стек кусок памяти будет первым в очереди на вывод из стека. 
+
+gcc -fPIC -c /projects/os_lab_2019/lab2/src/revert_string/main.c
+gcc -fPIC -c /projects/os_lab_2019/lab2/src/revert_string/revert_string.c
+gcc -shared -o liblab_2_2.so /projects/os_lab_2019/lab2/src/revert_string/revert_string.o
+mkdir use-shared-library
+gcc main.o -L. -llab_2_2 -o use-shared-library/shared
+LD_LIBRARY_PATH=$(pwd) use-shared-library/shared test
