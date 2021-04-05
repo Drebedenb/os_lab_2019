@@ -17,3 +17,9 @@
 !   shebang - в программировании последовательность из двух символов: #! в начале файла скрипта.
     #!/bin/sh - то загрузчик запускает на выполнение "/bin/sh" 
 !   od -   утилита в Unix-системах для вывода дампа файла в восьмеричном формате
+
+!   rm z.txt 2> /dev/null
+!   grep 'cake' /projects/os_lab_2019/lab1/src/cake_rhymes.txt > /projects/os_lab_2019/lab1/src/Untitled.txt 
+!   /projects/os_lab_2019/lab1/src/hello.sh
+!   cat ./Numbers.txt | xargs ./average.sh
+!   vAn - сдвиг (чтобы не вылезло лишнего) -N1 размерность 1 бит -tu1 знак

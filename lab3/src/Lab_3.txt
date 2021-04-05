@@ -1,0 +1,14 @@
+//3
+/projects/os_lab_2019/lab3/src/Lab_3_2/pa --seed 10 --array_size 100 --pnum 5 
+
+//4
+make -f /projects/os_lab_2019/lab3/src/makefile
+make -f /projects/os_lab_2019/lab3/src/makefile parallel_min_max
+gcc -c /projects/os_lab_2019/lab3/src/exec.c
+
+//5
+gcc -c /projects/os_lab_2019/lab3/src/exec.c
+gcc /projects/os_lab_2019/lab3/src/exec.o -o exec
+/projects/os_lab_2019/lab3/src/exec
+/projects/os_lab_2019/lab3/src/exec 10 100
+
