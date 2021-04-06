@@ -19,16 +19,10 @@
 int main(int argc, char **argv) {
   int seed = -1; // Число на основе которого генерируется массив 
   int array_size = -1;
-  int pnum = -1;// Указатель на число какое-то число 
+  int pnum = -1;
   bool with_files = false;
-  // pnum это что такое ? 
-  //int pipefd[2]; это что такое ? 
-  //pipe(pipefd); это что такое ? 
-  //  write(pipefd[1], &min_max, sizeof(struct MinMax)); ?
   while (true) 
   {
-    // Если мы можем присвоить текущему старый индекс, то оставляем оптинд иначе ставим 1 
-    //Переменная optind - это индекс следующего элемента, который будет обрабатываться в argv 
     int current_optind = optind ? optind : 1;
     static struct option options[] = {{"seed", required_argument, 0, 0},
                                       {"array_size", required_argument, 0, 0},
@@ -37,13 +31,7 @@ int main(int argc, char **argv) {
                                       {0, 0, 0, 0}};
     
     int option_index = 0;
-
-    /* Функция getopt() разбирает аргументы командной строки.Ее аргументы argc и argv являются счетчиком и массивом аргументов, 
-    которые передаются функции main() при запуске программы.
-    Элемент argv, начинающийся с "-" (и не являющийся "-" или "--"), считается опцией.
-    Функция getopt_long () работает так же, как getopt (), 
-    За исключением того, что она также принимает длинные параметры, начинающиеся с двух дефисов. */
-
+    // -f - опция
     int c = getopt_long(argc, argv, "f", options, &option_index);
     if (c == -1) break;
     switch (c) {
@@ -102,7 +90,7 @@ int main(int argc, char **argv) {
            argv[0]);
     return 1; 
   }
-  // Генерация массива
+
   int *array = malloc(sizeof(int) * array_size);
   GenerateArray(array, array_size, seed);
   int active_child_processes = 0;
@@ -110,28 +98,21 @@ int main(int argc, char **argv) {
   // Создаем переменную timeval и загоняем время нынешнее 
   struct timeval start_time;
   gettimeofday(&start_time, NULL);
-
-  int n = array_size / pnum; // ?
+  int n = array_size / pnum; // разбиение на отрезки
   int pipefd[2];
-
   pipe(pipefd); // создает pipe, однонаправленный канал данных, который можно использовать для межпроцессного взаимодействия.
   /* Данные, записанные в конец канала для записи, 
   буферизуются ядром до тех пор, пока не будут прочитаны из 
   конца канала для чтения  */
-  //Просто запихиваем концы
   for (int i = 0; i < pnum; i++) {
-
     /*Процессы создаются системным вызовом fork (так что операция создания нового процесса иногда вызывает раздваивание процесса).
      Дочерний процесс, созданный fork - точный аналог первоначального родительского процесса, 
      за исключением того, что он имеет собственный ID. */
-
-    pid_t child_pid = fork(); // Pid_t тип данных для ID процесса. Вы можете получить ID процесса, вызывая getpid.
-    
+    pid_t child_pid = fork(); // Pid_t тип данных для ID процесса.
     /*Если операция является успешной, то и родительский и дочерний процессы видят что fork возвращается,
     но с различными значениями: она возвращает значение 0 в дочернем процессе
     и ID порожденного процесса (ребенка) в родительском процессе.
     Если создание процесса потерпело неудачу, fork возвращает значение -1 в родительском процессе. */
-
     if (child_pid >= 0) {
       active_child_processes += 1;
       if (child_pid == 0) {
@@ -157,9 +138,9 @@ int main(int argc, char **argv) {
         } 
         else 
         {
-            // Вкидываем минмакс в пайп и он исполняется 
+            //0 - чтение 1 - запись
+            // запись в пайп
             write(pipefd[1], &min_max, sizeof(struct MinMax));
-            // close (pipefd[1]);
           // use pipe here
         }
         return 0;
@@ -174,7 +155,7 @@ int main(int argc, char **argv) {
 
   while (active_child_processes > 0) {
     // your code here
-    wait(NULL); // Ждем 
+    wait(NULL); // Ждем пока все доработают
     active_child_processes -= 1;
   }
 
@@ -187,6 +168,7 @@ int main(int argc, char **argv) {
     int max = INT_MIN;
 
     if (with_files) {
+        // из файла берем и сравниаваем
       struct MinMax min_max;
       FILE *fp;
       int j;

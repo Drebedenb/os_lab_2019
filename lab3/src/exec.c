@@ -8,10 +8,10 @@
 
 int main(int argc, char *argv[])
 {
-    int pid = fork();
-    if (pid == 0)
+    int pid = fork(); // Создаем дочерний процесс
+    if (pid == 0) // Если мы в дочернем
     {
-        execvp("./" COMMAND, argv);
+        execv("./" COMMAND, argv); // Запускаем sequential
     }
     return 0;
 }
