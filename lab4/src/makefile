@@ -1,15 +1,19 @@
 CC=gcc
 CFLAGS=-I.
 
-parallel_sum: parallel_sum.o utils.o utils.h Summary.o
-	$(CC) -o parallel_sum utils.o parallel_sum.o Summary.o  -lpthread  -L   $(CFLAGS)
+all: parallel_min_max process_memory
 
-parallel_sum.o: 
-	$(CC) -c parallel_sum.c $(CFLAGS) $(CFLAGS)
+process_memory: process_memory.c
+	$(CC) -o process_memory process_memory.c $(CFLAGS)
+
+parallel_min_max : utils.o find_min_max.o utils.h find_min_max.h
+	$(CC) -o parallel_min_max utils.o find_min_max.o parallel_min_max.c $(CFLAGS)
+
 utils.o : utils.h
 	$(CC) -o utils.o -c utils.c $(CFLAGS)
-Summary.o : Summary.h 
-	$(CC) -fPIC -c Summary.c -o Summary.o	$(CFLAGS)
 
-clean:
-	rm *.o parallel_sum 
+find_min_max.o : utils.h find_min_max.h
+	$(CC) -o find_min_max.o -c find_min_max.c $(CFLAGS)
+
+clean :
+	rm utils.o find_min_max.o parallel_min_max process_memory

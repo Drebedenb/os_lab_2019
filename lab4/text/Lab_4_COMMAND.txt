@@ -1,0 +1,32 @@
+cd os_lab_2019
+cd lab4
+cd src
+make -f makefile_1_3
+
+[jboss@workspaceof7r3wzilkb7avxm src]$ ./parallel_min_max --seed 4 --array_size 15 --pnum 5 --timeout 25
+Min: 246243954
+Max: 1991031403
+Elapsed time: 1000.558000ms
+
+[jboss@workspaceof7r3wzilkb7avxm src]$ ./parallel_min_max --seed 4 --array_size 15 --pnum 5 --timeout 1
+child process was killed
+child process was killed
+child process was killed
+child process was killed
+child process was killed
+Min: 246243954
+Max: 1991031403
+
+make -f makefile_1_3 clean
+
+make -f makefile_5
+[jboss@workspaceof7r3wzilkb7avxm src]$ ./parallel_sum --seed 3 --array_size 15 --threads_num 5
+summary open
+summary open
+summary open
+summary open
+summary open
+Total: 1760101845
+Elapsed time: 0.954000ms
+
+make -f makefile_5 clean

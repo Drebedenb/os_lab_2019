@@ -1,6 +1,7 @@
 #include <ctype.h>
 #include <limits.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,6 +15,7 @@
 
 #include "find_min_max.h"
 #include "utils.h"
+
 
 pid_t* PID_arr; 
 int pnum;
@@ -29,25 +31,30 @@ void child_killing(int sig)
   }
 }
 
+
+
 int main(int argc, char **argv) {
-  int seed = -1; // Число на основе которого генерируется массив 
+  int seed = -1;
+  int timeout=-1;
   int array_size = -1;
-  int timeout = -1;
-  int pnum = -1;
+  pnum = -1;
   bool with_files = false;
-  while (true) 
-  {
+
+  while (true) {
     int current_optind = optind ? optind : 1;
+
     static struct option options[] = {{"seed", required_argument, 0, 0},
                                       {"array_size", required_argument, 0, 0},
                                       {"pnum", required_argument, 0, 0},
+                                      {"timeout",required_argument,0,0},
                                       {"by_files", no_argument, 0, 'f'},
                                       {0, 0, 0, 0}};
-    
+
     int option_index = 0;
-    // -f - опция
     int c = getopt_long(argc, argv, "f", options, &option_index);
+
     if (c == -1) break;
+
     switch (c) {
       case 0:
         switch (option_index) {
@@ -57,6 +64,8 @@ int main(int argc, char **argv) {
             {
                 return 1;
             }
+            // your code here
+            // error handling
             break;
           case 1:
             array_size = atoi(optarg);
@@ -64,6 +73,8 @@ int main(int argc, char **argv) {
             {
                 return 1;
             }
+            // your code here
+            // error handling
             break;
           case 2:
             pnum = atoi(optarg);
@@ -71,13 +82,20 @@ int main(int argc, char **argv) {
             {
                 return 1;
             }
+            // your code here
+            // error handling
             break;
           case 3:
+            timeout = atof(optarg);
+            if (optarg <= 0) 
+            {
+              return 1;
+            }
+            break;
+          case 4:
             with_files = true;
             break;
-
-          defalut:
-            printf("Index %d is out of options\n", option_index);
+         
         }
         break;
       case 'f':
@@ -91,83 +109,78 @@ int main(int argc, char **argv) {
         printf("getopt returned character code 0%o?\n", c);
     }
   }
-  //Проверка на количество введеных аргументов которые не являются опцией
-  if (optind < argc)
-  {
+
+  if (optind < argc) {
     printf("Has at least one no option argument\n");
     return 1;
   }
-  // Проверка количества введенных аргументов 
-  if (seed == -1 || array_size == -1 || pnum == -1) 
-  {
+
+  if (seed == -1 || array_size == -1 || pnum == -1) {
     printf("Usage: %s --seed \"num\" --array_size \"num\" --pnum \"num\" \n",
            argv[0]);
-    return 1; 
+    return 1;
   }
 
   int *array = malloc(sizeof(int) * array_size);
   GenerateArray(array, array_size, seed);
   int active_child_processes = 0;
+
   struct timeval start_time;
   gettimeofday(&start_time, NULL);
-  int n = array_size / pnum; 
+  int n = array_size / pnum;
   int pipefd[2];
-
   pipe(pipefd);
   PID_arr = malloc(sizeof(pid_t)*pnum);
 
   for (int i = 0; i < pnum; i++) {
-    pid_t child_pid = fork(); 
-    if (child_pid >= 0) {
+    pid_t child_pid = fork();
+    if (child_pid >= 0 ) {
+      PID_arr[i] = child_pid;
+      // successful fork
       active_child_processes += 1;
-      if (child_pid == 0) {
-
+      if (child_pid == 0 ) {
+        // child process
         struct MinMax min_max;
         min_max = GetMinMax(array, (unsigned int)i * n, (unsigned int)(i + 1) * n);
-        if (with_files)
-        {
+
+        // parallel somehow
+        if (with_files) {
             FILE *fp;
             if (i == 0)
-            {
-            fp = fopen("output.txt", "w"); 
-            }
-            else
-            {
-            fp = fopen("output.txt", "a"); 
-            }
+          {
+            fp = fopen("output.txt", "w");
+          }
+          else
+          {
+            fp = fopen("output.txt", "a");
+          }
           fprintf(fp, "%d %d\n", min_max.min, min_max.max);
           fclose(fp);
-        } 
-        else 
-        {
+          // use files here
+        } else {
             write(pipefd[1], &min_max, sizeof(struct MinMax));
+          // use pipe here
         }
         return 0;
       }
+
     } 
-    else 
-    {
+    else {
       printf("Fork failed!\n");
       return 1;
     }
   }
-
-  while (active_child_processes > 0) {
-    wait(NULL); 
-    active_child_processes -= 1;
-  }
-
   if (timeout > 0)
   {
-    //    alarm () организует доставку сигнала SIGALRM 
-    //    вызывающему процессу в считанные секунды. 
-
-    //    Если секунды равны нулю, любой ожидающий сигнал тревоги отменяется. 
-
-    //    В любом случае любой ранее установленный сигнал тревоги () отменяется.
     alarm(timeout); 
     signal(SIGALRM, child_killing); 
     sleep(1);
+  }
+
+  while (active_child_processes > 0) {
+    // your code here
+    wait(NULL);
+    active_child_processes -= 1;
   }
 
   struct MinMax min_max;
@@ -199,6 +212,7 @@ int main(int argc, char **argv) {
       read(pipefd[0], &min_max, sizeof(struct MinMax));
       min = min_max.min;
       max = min_max.max;
+      // read from pipes
     }
 
     if (min < min_max.min) min_max.min = min;
@@ -210,7 +224,9 @@ int main(int argc, char **argv) {
 
   double elapsed_time = (finish_time.tv_sec - start_time.tv_sec) * 1000.0;
   elapsed_time += (finish_time.tv_usec - start_time.tv_usec) / 1000.0;
+
   free(array);
+
   printf("Min: %d\n", min_max.min);
   printf("Max: %d\n", min_max.max);
   printf("Elapsed time: %fms\n", elapsed_time);
